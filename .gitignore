@@ -1,0 +1,32 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+.env.*
+
+# Secrets and credentials
+auth.json
+installation.json
+active.json
+sessions/
+cookies.txt
+*.pem
+*.key
+
+# Local application data
+data/
+*.db
+*.sqlite3
+
+# Logs
+*.log
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

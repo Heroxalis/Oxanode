@@ -1,3 +1,4 @@
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -5,6 +6,7 @@ from fastapi import FastAPI
 from app.api.auth import router as auth_router
 from app.core.installation import load_installation
 from app.services.authentication import AuthenticationService
+from app.services.rate_limiter import LoginRateLimiter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,9 +15,11 @@ async def lifespan(app: FastAPI):
     if config is not None:
         app.state.config = config
         app.state.auth_service = AuthenticationService(config)
+        app.state.rate_limiter = LoginRateLimiter(config)
     else:
         app.state.config = None
         app.state.auth_service = None
+        app.state.rate_limiter = None
 
     yield
 
@@ -27,7 +31,6 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
-
 
 @app.get("/api/health")
 async def health_check():

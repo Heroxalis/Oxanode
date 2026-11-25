@@ -1,7 +1,5 @@
 import { proxyAuthRequest } from "@/features/auth/lib/server-api";
 
-export const dynamic = "force-dynamic";
-
 export async function POST(request: Request) {
     let payload: unknown;
 

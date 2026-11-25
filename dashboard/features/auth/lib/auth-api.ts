@@ -14,6 +14,16 @@ export interface AdminResponse {
   authenticated: boolean;
 }
 
+export class AuthApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "AuthApiError";
+  }
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -23,7 +33,7 @@ async function request<T>(
     credentials: "same-origin",
     cache: "no-store",
     headers: {
-      "Content-Type": "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
       ...options.headers,
     },
   });
@@ -31,8 +41,9 @@ async function request<T>(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(
+    throw new AuthApiError(
       data?.detail || data?.message || "An unexpected error occurred.",
+      response.status,
     );
   }
 

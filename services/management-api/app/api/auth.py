@@ -34,6 +34,19 @@ def get_rate_limiter(request: Request):
 
     return rate_limiter
 
+async def require_admin(request: Request):
+    auth_service = get_auth_service(request)
+    token = request.cookies.get(SESSION_COOKIE)
+
+    if not token or not auth_service.verify_session(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Administrator authentication required.",
+        )
+
+    return True
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     credentials: LoginRequest,

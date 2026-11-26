@@ -1,11 +1,12 @@
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
+from app.api.metrics import router as metrics_router
 from app.core.installation import load_installation
 from app.services.authentication import AuthenticationService
+from app.services.metrics import MetricsService
 from app.services.rate_limiter import LoginRateLimiter
 
 @asynccontextmanager
@@ -16,12 +17,28 @@ async def lifespan(app: FastAPI):
         app.state.config = config
         app.state.auth_service = AuthenticationService(config)
         app.state.rate_limiter = LoginRateLimiter(config)
+
+        metrics_service = MetricsService(interval=2.0)
+        app.state.metrics_service = metrics_service
+
+        await metrics_service.start()
     else:
         app.state.config = None
         app.state.auth_service = None
         app.state.rate_limiter = None
+        app.state.metrics_service = None
 
-    yield
+    try:
+        yield
+    finally:
+        metrics_service = getattr(
+            app.state,
+            "metrics_service",
+            None,
+        )
+
+        if metrics_service is not None:
+            await metrics_service.stop()
 
 app = FastAPI(
     title="Oxanode Management API",
@@ -31,6 +48,7 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
+app.include_router(metrics_router)
 
 @app.get("/api/health")
 async def health_check():
